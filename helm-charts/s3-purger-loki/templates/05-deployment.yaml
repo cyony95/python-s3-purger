@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "s3-purger-loki.fullname" . }}
+  labels:
+    app: {{ template "s3-purger-loki.name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ template "s3-purger-loki.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "s3-purger-loki.name" . }}
+        release: "{{ .Release.Name }}"
+    spec:
+      tolerations:
+      # Tolerate master taint
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      serviceAccountName: {{ template "s3-purger-loki.fullname" . }}
+      containers:
+      - name: {{ template "s3-purger-loki.fullname" . }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+        env:
+        - name: ACCESS_KEY
+          value: {{ .Values.s3.access_key }}
+        - name: SECRET_KEY
+          value: {{ .Values.s3.secret_key }}
+        - name: S3_ENDPOINT_URL
+          value: {{ .Values.s3.url }}
+        - name: BUCKET_NAME
+          value: {{ .Values.s3.bucket_name }}
+        - name: BUCKET_SIZE
+          value: {{ .Values.s3.bucket_size }}        
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        volumeMounts:
+        - name: s3purger
+          mountPath: /s3purger/s3
+        
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: s3purger
+

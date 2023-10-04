@@ -1,0 +1,26 @@
+image:
+  repository: monitoring/s3purger
+    # -- Overrides the image tag whose default is the chart's appVersion
+  tag: <DOCKER_VERSION>  #choose whatever version you d like
+  # -- Docker image pull policy
+  pullPolicy: IfNotPresent
+
+
+deployment:
+  replicas: 1
+
+networkPolicy:
+  enabled: true 
+   
+resources:
+    limits:
+      cpu: 600m
+      memory: 1000Mi
+
+s3:
+  access_key: access_key
+  secret_key: secret_key
+  url: http://s3_ip
+  bucket_name: domain-central-logs
+  management_ip: "127.0.0.1"s
+  bucket_size: 3000000000   # size must be in bytes (check the source code in app.py
